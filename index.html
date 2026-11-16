@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Closify 프로토타입</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#C8344F">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Closify">
+<script>
+  /* ▼ Google Analytics: 측정 ID(G-로 시작)를 넣으면 바로 연동됩니다. 비워 두면 수집하지 않아요. */
+  window.GA_ID = "";
+  if (window.GA_ID) {
+    var s=document.createElement("script"); s.async=true; s.src="https://www.googletagmanager.com/gtag/js?id="+window.GA_ID; document.head.appendChild(s);
+    window.dataLayer=window.dataLayer||[]; window.gtag=function(){dataLayer.push(arguments);};
+    gtag("js", new Date()); gtag("config", window.GA_ID, {send_page_view:false});
+  }
+</script>
+<style>
+:root{
+  --bg:#FDF5F6; --card:#FBEAEE; --line:#F0CDD5; --ink:#2A1D21; --sub:#6E5A60;
+  --accent:#C8344F; --accent-ink:#FFFFFF; --soft:#E296A7; --chip:#FFFFFF;
+  --yellow:#9A6A00; --red:#B3261E; --good:#2E7D5B; --nav:#FFFFFF; color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1C1417; --card:#2A1E22; --line:#4A3239; --ink:#F7ECEE; --sub:#C3AAB1;
+    --accent:#E2577A; --accent-ink:#1C1417; --soft:#7A3E4D; --chip:#231A1D;
+    --yellow:#F0B35A; --red:#FF8A80; --good:#6FCB9F; --nav:#20171A; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1C1417; --card:#2A1E22; --line:#4A3239; --ink:#F7ECEE; --sub:#C3AAB1;
+  --accent:#E2577A; --accent-ink:#1C1417; --soft:#7A3E4D; --chip:#231A1D;
+  --yellow:#F0B35A; --red:#FF8A80; --good:#6FCB9F; --nav:#20171A; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);
+  font-family:"IBM Plex Sans KR",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+main{max-width:500px;margin:0 auto;padding:28px 22px 120px}
+body.full main{padding-bottom:40px}
+h1{font-size:2rem;line-height:1.25;margin:8px 0 6px;font-weight:700;letter-spacing:-.02em}
+h2{font-size:1.1rem;margin:0 0 10px;line-height:1.4}
+.lead{color:var(--sub);font-size:1.02rem;margin:0 0 24px}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:26px;padding:22px;margin-bottom:16px}
+.label{color:var(--sub);font-size:.9rem;margin:0 0 6px}
+.mission{font-weight:700;font-size:1.12rem;line-height:1.55;margin:0 0 14px}
+.row{display:flex;gap:8px}
+.pill{flex:1 1 0;min-width:0;min-height:50px;border-radius:999px;border:1.5px solid var(--line);
+  background:var(--chip);color:var(--ink);font:inherit;font-weight:600;font-size:.95rem;cursor:pointer;padding:8px}
+.pill[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border-radius:999px;border:1.5px solid var(--line);background:var(--chip);color:var(--ink);font:inherit;font-size:.9rem;padding:7px 14px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+textarea,input[type=text]{width:100%;border:1.5px solid var(--line);background:var(--chip);color:var(--ink);
+  border-radius:18px;padding:12px 16px;font:inherit;font-size:1rem;resize:vertical}
+textarea.big{min-height:170px;background:var(--card);border-radius:26px;padding:20px 22px;font-size:1.04rem}
+textarea::placeholder,input::placeholder{color:var(--sub)}
+.btn{display:block;width:100%;min-height:56px;border-radius:999px;border:0;font:inherit;font-weight:700;font-size:1.06rem;cursor:pointer;margin-top:12px}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.primary:disabled{background:var(--soft);opacity:.75;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn.small{min-height:46px;font-size:.95rem;margin-top:8px}
+.btn.ghost[data-on="true"]{border-color:var(--accent);color:var(--accent)}
+.link{background:none;border:0;color:var(--sub);font:inherit;font-size:.92rem;cursor:pointer;padding:8px 0;text-decoration:underline;text-underline-offset:3px}
+.link.accent{color:var(--accent);text-decoration:none;font-weight:600}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.center{text-align:center}
+.situation{color:var(--sub);border-left:3px solid var(--line);padding:2px 0 2px 14px;margin:0 0 22px}
+.inner{margin:0 0 4px;padding-left:20px}
+.swap{background:var(--chip);border-radius:18px;padding:14px 16px;margin-top:14px}
+.swap .old{color:var(--sub);margin:0;text-decoration:line-through;text-decoration-thickness:1px}
+.swap .new{font-weight:700;margin:4px 0 0}
+.swap .new::before{content:"→ ";color:var(--accent)}
+.notice{border-radius:16px;padding:12px 14px;margin-top:14px;font-size:.93rem;background:var(--chip);border:1.5px solid var(--line)}
+.notice.yellow{border-color:var(--yellow)} .notice.red{border-color:var(--red)}
+.notice b{display:block}
+.notice.yellow b{color:var(--yellow)} .notice.red b{color:var(--red)}
+details{margin-top:14px}
+summary{cursor:pointer;color:var(--sub);font-size:.9rem}
+details p{margin:8px 0 0;font-size:.93rem}
+.call{display:flex;justify-content:space-between;align-items:center;text-decoration:none;color:var(--ink);
+  background:var(--chip);border:1.5px solid var(--line);border-radius:16px;padding:13px 16px;margin-top:8px;font-weight:600}
+.call span:last-child{color:var(--red);font-weight:700}
+.loading{color:var(--sub);display:flex;align-items:center;gap:10px;padding:30px 0}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--accent);animation:pulse 1s infinite ease-in-out}
+@keyframes pulse{50%{opacity:.25}}
+@media (prefers-reduced-motion: reduce){.dot{animation:none}}
+.nudge{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;border-top:1px solid var(--line);margin-top:22px;font-size:.93rem}
+.season{background:transparent;border-style:dashed}
+.manual li{margin-bottom:8px}
+.manual li.hard{color:var(--sub)}
+.progress{height:8px;border-radius:999px;background:var(--chip);border:1px solid var(--line);overflow:hidden;margin-top:10px}
+.progress span{display:block;height:100%;background:var(--accent)}
+.stat{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;margin-top:12px}
+.stat b{display:block;font-size:1.6rem;color:var(--accent);line-height:1.2}
+.stat span{font-size:.78rem;color:var(--sub)}
+.seg{display:flex;border-bottom:1.5px solid var(--line);margin:8px 0 6px}
+.seg button{flex:1;border:0;background:none;color:var(--sub);font:inherit;font-weight:600;padding:10px 4px;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1.5px}
+.seg button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.rec{border-bottom:1px solid var(--line);padding:14px 0}
+.rec:last-child{border-bottom:0}
+.date{color:var(--sub);font-size:.8rem;margin:0}
+.rec p{margin:2px 0}
+.tag{display:inline-block;font-size:.8rem;font-weight:600;border-radius:999px;padding:2px 10px;background:var(--chip);border:1px solid var(--line);margin:4px 6px 0 0}
+.tag.red{color:var(--red)}
+.mood{display:flex;gap:6px;margin:6px 0 2px}
+.mood button{flex:1;min-height:44px;border-radius:14px;border:1.5px solid var(--line);background:var(--chip);color:var(--ink);font:inherit;font-weight:600;cursor:pointer}
+.mood button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.scale{display:flex;justify-content:space-between;color:var(--sub);font-size:.78rem}
+.q{padding:12px 0;border-bottom:1px solid var(--line)}
+.q:last-child{border-bottom:0}
+.q p{margin:0 0 6px}
+.counter{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)}
+.counter .ctl{display:flex;align-items:center;gap:12px}
+.counter button{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--line);background:var(--chip);color:var(--ink);font:inherit;font-size:1.2rem;cursor:pointer}
+.counter b{min-width:22px;text-align:center;font-size:1.15rem}
+.log{font-size:.83rem;max-height:240px;overflow:auto;background:var(--chip);border-radius:16px;padding:8px 12px}
+.log div{padding:4px 0;border-bottom:1px dashed var(--line);word-break:break-all}
+.log b{color:var(--accent)}
+.empty{color:var(--sub);text-align:center;padding:16px 0;margin:0}
+.switch{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0}
+.switch input{width:22px;height:22px;accent-color:var(--accent);flex:none}
+.kakao{background:#FEE500;color:#191600}
+.plan{display:block;width:100%;text-align:left;background:var(--chip);border:2px solid var(--line);border-radius:20px;padding:14px 16px;margin-top:10px;color:var(--ink);font:inherit;cursor:pointer}
+.plan[aria-pressed="true"]{border-color:var(--accent)}
+.plan b{font-size:1.1rem}
+.plan .badge{float:right;background:var(--accent);color:var(--accent-ink);font-size:.75rem;border-radius:999px;padding:2px 8px;font-weight:700}
+.phrase{padding:12px 0;border-bottom:1px solid var(--line)}
+.phrase:last-child{border-bottom:0}
+.phrase .old{color:var(--sub);margin:0;text-decoration:line-through;text-decoration-thickness:1px}
+.phrase .new{font-weight:700;margin:2px 0 0}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--nav);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))}
+body.full nav{display:none}
+nav .wrap{max-width:500px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr)}
+nav button{background:none;border:0;color:var(--ink);font:inherit;font-size:.85rem;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:4px 0}
+nav .ic{width:64px;height:34px;border-radius:999px;display:grid;place-items:center}
+nav button[aria-current="page"]{color:var(--accent)}
+nav button[aria-current="page"] .ic{background:var(--card)}
+nav svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+[hidden]{display:none!important}
+.cont{background:var(--chip);border:1.5px solid var(--line);border-radius:18px;padding:12px 16px;margin:0 0 18px;font-size:.95rem}
+.cont b{display:block;color:var(--accent);font-size:.85rem;margin-bottom:2px}
+.thread{margin-top:14px}
+.thread .q{border:0;padding:8px 0 2px;font-weight:600;margin:0}
+.thread .a{margin:0 0 6px;padding:10px 14px;background:var(--chip);border-radius:16px}
+.ask{display:flex;gap:8px;margin-top:10px}
+.ask input{flex:1}
+.ask button{flex:none;border:0;border-radius:999px;background:var(--accent);color:var(--accent-ink);font:inherit;font-weight:700;padding:0 18px;cursor:pointer}
+.ask button:disabled{background:var(--soft)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(90px + env(safe-area-inset-bottom,0px));
+  background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:.9rem;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9;max-width:90vw;text-align:center}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<nav aria-label="메뉴"><div class="wrap">
+  <button data-tab="today"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 4h16v12H8l-4 4z"/></svg></span>오늘</button>
+  <button data-tab="child"><span class="ic"><svg viewBox="0 0 24 24"><path d="M2 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H2zM22 5h-7a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h8z"/></svg></span>기록</button>
+  <button data-tab="my"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>마이</button>
+</div></nav>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ============ 데이터 ============ */
+const CARDS = [
+ {id:"C1",area:"심리학",title:"자율성 욕구",text:"사춘기 아이는 스스로 결정하고 싶어 한다. 통제보다 선택지를 줄 때 협력이 늘어난다.",trait:"스스로 정하게 하면 잘 따라와요"},
+ {id:"C2",area:"심리학",title:"과정 인정",text:"점수보다 노력과 과정을 알아줄 때 아이가 실패를 덜 두려워한다.",trait:"결과보다 노력을 알아줄 때 마음을 열어요"},
+ {id:"C3",area:"심리학",title:"정체성 탐색",text:"사춘기에는 부모와 다른 의견을 내는 것이 자연스러운 발달 과정이다.",trait:"자기 생각을 존중받을 때 이야기가 길어져요"},
+ {id:"C4",area:"심리학",title:"정서 조절 발달",text:"사춘기 뇌는 감정 반응이 먼저 커지고 조절 능력은 늦게 자란다. 감정이 가라앉은 뒤 대화하는 것이 효과적이다.",trait:"감정이 가라앉은 뒤에 대화가 잘 돼요"},
+ {id:"C5",area:"심리학",title:"수면 리듬 변화",text:"사춘기에는 생체 리듬이 늦춰져 늦게 자고 늦게 일어나는 경향이 생긴다.",trait:"아침보다 저녁에 대화가 잘 돼요"},
+ {id:"C6",area:"상담학",title:"감정코칭",text:"행동을 고치기 전에 감정에 먼저 이름을 붙여 주면 아이의 방어가 줄어든다.",trait:"감정을 먼저 알아주면 방어가 풀려요"},
+ {id:"C7",area:"상담학",title:"나-전달법",text:"‘너는 왜’ 대신 ‘나는 ~해서 걱정됐어’로 말하면 비난으로 들릴 가능성이 줄어든다.",trait:"걱정을 ‘나는’으로 말하면 잘 받아들여요"},
+ {id:"C8",area:"상담학",title:"적극적 경청",text:"조언보다 들은 말을 되돌려 주는 것이 대화를 이어 가게 한다.",trait:"조언 없이 끝까지 들어 주면 말이 많아져요"},
+ {id:"C9",area:"상담학",title:"타임아웃",text:"감정이 격해졌을 때는 ‘조금 있다가 다시 얘기하자’며 대화를 멈추는 것이 관계를 지킨다.",trait:"싸움 중엔 잠시 멈추는 게 효과적이에요"},
+ {id:"C10",area:"상담학",title:"열린 질문",text:"‘했어?’ 같은 닫힌 질문보다 ‘어땠어?’ 같은 열린 질문이 대화를 길게 만든다.",trait:"‘어땠어?’처럼 열린 질문에 더 답해요"},
+ {id:"C11",area:"상담학",title:"구체적 칭찬",text:"‘잘했어’보다 구체적인 행동을 짚어 주는 칭찬이 진심으로 전달된다.",trait:"구체적으로 칭찬받을 때 좋아해요"},
+ {id:"C12",area:"가족학",title:"부담 낮은 접촉",text:"갈등 직후에는 직접 대화보다 쪽지·문자·간식처럼 부담이 적은 접촉이 관계 회복의 첫걸음이 된다.",trait:"직접 대화보다 문자·쪽지에 먼저 반응해요"},
+ {id:"C13",area:"가족학",title:"규칙의 공동 결정",text:"스마트폰·귀가 같은 규칙은 함께 정할 때 지켜질 가능성이 높다.",trait:"규칙은 함께 정할 때 지켜요"},
+ {id:"C14",area:"가족학",title:"함께하는 일상",text:"대화를 목표로 하지 않는 짧은 공동 활동이 자연스러운 대화를 만든다.",trait:"간식·산책처럼 같이 있는 시간에 말이 열려요"},
+ {id:"C15",area:"가족학",title:"부모의 자기 돌봄",text:"부모의 정서가 안정될수록 갈등 상황에서 일관된 반응을 하기 쉽다.",trait:"부모가 차분할 때 아이도 차분해져요"},
+ {id:"C16",area:"가족학",title:"사생활 존중",text:"방·휴대폰 같은 사적 영역을 존중받는다고 느낄 때 아이는 오히려 더 많이 이야기한다.",trait:"사적인 공간을 존중받으면 더 이야기해요"},
+ {id:"C17",area:"세대 비교",title:"확인 대신 관심",text:"‘성적 몇 점?’ 같은 확인형 질문은 감시로 들리기 쉽다. 하루의 다른 부분을 묻는 관심형 질문으로 바꾼다.",trait:"성적 확인보다 일상 이야기에 반응해요"},
+ {id:"C18",area:"세대 비교",title:"비교의 역효과",text:"‘누구는’ 식의 비교는 지금 아이들에게 자존감 공격으로 받아들여진다.",trait:"비교하지 않을 때 편안해해요"},
+ {id:"C19",area:"세대 비교",title:"디지털 관계",text:"지금 아이들에게 스마트폰은 친구 관계의 공간이다. 일방적 압수는 사회적 단절로 느껴진다.",trait:"폰 문제는 압수보다 대화로 풀려요"},
+ {id:"C20",area:"세대 비교",title:"애정의 직접 표현",text:"지금 아이들은 걱정과 확인보다 짧고 직접적인 애정 표현을 더 잘 알아듣는다.",trait:"짧고 직접적인 애정 표현을 좋아해요"}
+];
+const PHRASES = [
+ {id:"P1",cat:"성적·진로",old:"몇 점 나왔어?",new:"시험 끝나서 홀가분하겠다. 오늘은 푹 쉬어."},
+ {id:"P2",cat:"성적·진로",old:"누구는 몇 점이라던데.",new:"이번에 제일 신경 쓴 과목이 뭐였어?"},
+ {id:"P11",cat:"성적·진로",old:"그거 해서 뭐 먹고 살래?",new:"그게 왜 좋아? 더 듣고 싶다."},
+ {id:"P4",cat:"스마트폰",old:"폰 좀 그만 봐!",new:"지금 하던 거 끝나면 저녁 같이 먹자. 몇 분이면 될까?"},
+ {id:"P5",cat:"스마트폰",old:"폰 압수야.",new:"폰 시간, 엄마가 정하지 말고 우리 같이 정해 보자."},
+ {id:"P6",cat:"귀가·생활습관",old:"지금이 몇 시야!",new:"늦어서 걱정했어. 무사히 와서 다행이다."},
+ {id:"P13",cat:"귀가·생활습관",old:"방 꼴이 이게 뭐야.",new:"주말 전까지 방 정리해 줄 수 있어? 언제 할지는 네가 정해."},
+ {id:"P8",cat:"대화 단절",old:"왜 말을 안 해?",new:"말 안 해도 괜찮아. 엄마는 여기 있을게."},
+ {id:"P10",cat:"대화 단절",old:"다 너 잘되라고 하는 말이야.",new:"엄마 생각은 이런데, 너는 어떻게 생각해?"},
+ {id:"P9",cat:"말투·태도",old:"엄마한테 그게 무슨 말버릇이야!",new:"지금 많이 화났구나. 조금 있다가 다시 얘기하자."}
+];
+const SEASONS = [
+ {date:"2026-12-07",title:"기말고사",mind:"한 해 성적이 정리되는 시험이라 압박이 커요. 짜증이 늘어도 시험 스트레스일 수 있어요.",line:"요즘 많이 피곤하지? 먹고 싶은 거 있으면 말해."},
+ {date:"2026-12-24",title:"성적표",mind:"보여 주기 전부터 부모 반응을 걱정해요.",line:"보여 주고 싶을 때 보여 줘. 1년 동안 고생했어."},
+ {date:"2026-12-31",title:"겨울방학",mind:"쉬고 싶은 마음과 계획 부담이 함께 있어요.",line:"방학 때 꼭 해 보고 싶은 거 하나만 말해 줄래?"},
+ {date:"2027-03-02",title:"새 학기",mind:"새 반, 새 친구 관계에 긴장해요.",line:"새 반 어때? 같이 다니는 친구 생겼어?"},
+ {date:"2027-04-26",title:"중간고사",mind:"새 학년 첫 시험이라 불안이 커요.",line:"너무 무리하지 말고, 쉬는 시간도 꼭 챙겨."}
+];
+const ANX_Q = ["내가 아이를 잘못 키우고 있는 것 같다","아이와 대화할 때 무슨 말을 해야 할지 몰라 긴장된다","아이의 행동이 정상인지 걱정된다","아이와 싸운 뒤 오래 마음이 불편하다","아이의 미래가 걱정돼 잠들기 어렵다","부모로서 자신감이 없다"];
+const CRISIS_WORDS = ["죽고싶","자살","자해","손목","사라지고싶","죽어버","가출","집을나갔","때렸","맞았","폭력","학대","목을맸","뛰어내"];
+
+/* ============ GA 연동 래퍼 (아이 관련 글 내용은 보내지 않음) ============ */
+const events = [];
+function track(name, params = {}) {
+  events.unshift({name, params, at:new Date()});
+  if (typeof window.gtag === "function") window.gtag("event", name, params);
+  if (currentTab === "my") renderLog();
+}
+
+/* ============ 저장소 ============ */
+const KEY = "closify-proto-v3";
+const blank = () => ({profile:null, login:null, trialStart:null, subscribed:false, plan:null,
+  records:[], saved:[], checks:[], active:[], notif:{evening:true, season:true}});
+function load(){ try { return Object.assign(blank(), JSON.parse(localStorage.getItem(KEY)) || {}); } catch { return blank(); } }
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} }
+let S = load();
+
+/* ============ 유틸 ============ */
+const $ = s => document.querySelector(s);
+const app = $("#app");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const iso = d => { const x=new Date(d); x.setMinutes(x.getMinutes()-x.getTimezoneOffset()); return x.toISOString().slice(0,10); };
+const today = () => iso(new Date());
+const ago = n => iso(new Date(Date.now()-n*86400000));
+const daysBetween = (a,b) => Math.round((new Date(b)-new Date(a))/86400000);
+function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); clearTimeout(toast.t); toast.t=setTimeout(()=>t.classList.remove("show"),1900); }
+function markActive(){ if(!S.active.includes(today())) S.active.push(today()); }
+const kid = () => !S.profile ? "아이" : S.profile.gender==="아들" ? `${S.profile.grade} 아들` : S.profile.gender==="딸" ? `${S.profile.grade} 딸` : `${S.profile.grade} 아이`;
+const withKid = () => { const k=kid(); const c=k.charCodeAt(k.length-1)-0xAC00; return k + (c>=0 && c%28 ? "과" : "와"); };
+const trialLeft = () => !S.trialStart ? 7 : Math.max(0, 7 - daysBetween(S.trialStart, today()));
+const canUse = () => S.subscribed || trialLeft() > 0;
+const localCrisis = t => { const s=t.replace(/\s/g,""); return CRISIS_WORDS.some(w=>s.includes(w)); };
+const pending = () => S.records.find(r=>r.mission && r.status==="accepted" && !r.result);
+const nextSeason = () => SEASONS.find(s=>s.date>=today() && daysBetween(today(),s.date)<=14);
+function streak(){ const set=new Set(S.active); let n=0; const d=new Date(); while(set.has(iso(d))){ n++; d.setDate(d.getDate()-1); } return n; }
+function checkDue(){ const last=S.checks[S.checks.length-1]; return !last || daysBetween(last.date,today())>=7; }
+function moodRow(el, onPick){
+  el.innerHTML = [1,2,3,4,5].map(n=>`<button aria-pressed="false">${n}</button>`).join("");
+  el.onclick = e => { const b=e.target.closest("button"); if(!b) return; el.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", x===b)); onPick(+b.textContent); };
+}
+
+/* ============ AI (claude.ai 안에서는 실제 AI, 밖에서는 데모 응답) ============ */
+let sample = null, dictation = null;
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (!window.claude?.use && SR) {
+  let rec=null; const st=[], fin=[];
+  dictation = {
+    onFinal:f=>{fin.length=0; fin.push(f);}, onState:f=>{st.length=0; st.push(f);},
+    start:()=>new Promise((res,rej)=>{ try{
+      rec=new SR(); rec.lang="ko-KR"; rec.interimResults=false;
+      rec.onresult=e=>fin.forEach(f=>f({text:e.results[e.results.length-1][0].transcript}));
+      rec.onend=()=>{ rec=null; st.forEach(f=>f({state:"idle"})); };
+      rec.onerror=()=>{ rec=null; st.forEach(f=>f({state:"idle"})); };
+      rec.start(); st.forEach(f=>f({state:"listening"})); res();
+    }catch(e){ rej(e); } }),
+    stop:()=>{ rec?.stop(); }
+  };
+}
+if (window.claude?.use) {
+  claude.use("sample").then(s=>{ sample=s; });
+  claude.use("dictation").then(d=>{ dictation=d; const v=$("#voice"); if(v&&d){ v.hidden=false; bindVoice(); } });
+}
+async function ask(prompt, fallback){
+  if (sample) {
+    try { return {data: await sample.json(prompt, {modelTier:"default"}), source:"ai"}; } catch {}
+  }
+  try {
+    const ctl = new AbortController(); const timer = setTimeout(()=>ctl.abort(), 25000);
+    const r = await fetch("/api/ai", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({prompt}), signal:ctl.signal});
+    clearTimeout(timer);
+    if (r.ok) { const j = await r.json(); if (j && j.data) return {data:j.data, source:"ai"}; }
+  } catch {}
+  return {data:fallback(), source:"demo"};
+}
+
+/* ============ 라우팅 ============ */
+let currentTab = null;
+document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>go(b.dataset.tab)));
+function go(tab, arg){
+  if (!S.profile) tab = "onboarding";
+  currentTab = tab;
+  document.body.classList.toggle("full", ["onboarding","paywall","check","analysis","crisis"].includes(tab));
+  document.querySelectorAll("nav button").forEach(b=>{ if(b.dataset.tab===tab) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current"); });
+  ({onboarding:renderOnboarding, today:renderToday, child:renderChild, my:renderMy, paywall:renderPaywall, check:renderCheck, analysis:renderAnalysis, crisis:renderCrisis})[tab](arg);
+  window.scrollTo(0,0);
+  track("screen_view",{screen_name:tab});
+}
+
+/* ============ 온보딩 (2단계) ============ */
+let ob = {step:0, grade:null, gender:null, concerns:[], consent:false};
+function renderOnboarding(){
+  const grades=["초5","초6","중1","중2","중3","고1","고2"], genders=["아들","딸","밝히지 않음"], concerns=["대화 단절","스마트폰","성적·진로","귀가·생활습관","말투·태도"];
+  const chips=(id,arr,isOn)=>`<div class="chips" id="${id}">${arr.map(x=>`<button class="chip" aria-pressed="${isOn(x)}">${x}</button>`).join("")}</div>`;
+  app.innerHTML = `<h1>Closify</h1><p class="lead">사춘기 아이의 속마음을 통역하고,<br>오늘 해 볼 한 가지를 알려 드려요.</p>
+    <h2>먼저 아이에 대해 알려 주세요</h2><p class="label" style="margin:-4px 0 16px">이름과 학교는 묻지 않아요.</p>
+    <p class="label">학년</p>${chips("g",grades,x=>ob.grade===x)}
+    <p class="label" style="margin-top:18px">성별</p>${chips("s",genders,x=>ob.gender===x)}
+    <p class="label" style="margin-top:18px">요즘 가장 큰 고민 (여러 개 가능)</p>${chips("c",concerns,x=>ob.concerns.includes(x))}
+    <label class="switch" style="margin-top:24px"><span style="font-size:.9rem">개인정보 수집·이용에 동의하고, Closify가 상담·치료가 아닌 코칭 도구임을 이해했어요.</span><input type="checkbox" id="agree" ${ob.consent?"checked":""}></label>
+    <button class="btn primary" id="start" ${ob.grade&&ob.gender&&ob.consent?"":"disabled"}>시작하기</button>
+    <p class="label center" style="margin-top:12px">처음 7일은 무료예요. 자동으로 결제되지 않아요.</p>`;
+  $("#g").onclick=e=>{const b=e.target.closest("button"); if(b){ob.grade=b.textContent; renderOnboarding();}};
+  $("#s").onclick=e=>{const b=e.target.closest("button"); if(b){ob.gender=b.textContent; renderOnboarding();}};
+  $("#c").onclick=e=>{const b=e.target.closest("button"); if(!b) return; const v=b.textContent; ob.concerns=ob.concerns.includes(v)?ob.concerns.filter(x=>x!==v):[...ob.concerns,v]; renderOnboarding();};
+  $("#agree").onchange=e=>{ ob.consent=e.target.checked; renderOnboarding(); };
+  $("#start").onclick=()=>{
+    S.profile={grade:ob.grade, gender:ob.gender, concerns:ob.concerns}; S.trialStart=S.trialStart||today(); save();
+    track("onboarding_complete",{grade:ob.grade, concern_count:ob.concerns.length}); track("trial_start");
+    go("today");
+  };
+}
+
+/* ============ 오늘 ============ */
+function renderToday(){
+  const p = pending();
+  if (p) return renderResultAsk(p);
+  const ss = S.notif.season ? nextSeason() : null, left = trialLeft();
+  app.innerHTML = `
+    <h1>오늘</h1><p class="lead">${esc(withKid())} 어떤 일이 있었나요?</p>
+    ${ss?`<div class="card season"><p class="label">${daysBetween(today(),ss.date)}일 뒤 ${esc(ss.title)}</p><p style="margin:0 0 8px">${esc(ss.mind)}</p><p style="margin:0;font-weight:700">“${esc(ss.line)}”</p></div>`:""}
+    <textarea class="big" id="sit" placeholder="방금 있었던 일을 편하게 적어 주세요.&#10;예: 성적표를 안 보여주고 방에 들어갔어요"></textarea>
+    <button class="btn primary" id="send" disabled>보내기</button>
+    <button class="btn ghost" id="voice" ${dictation?"":"hidden"}>음성으로 말하기</button>
+    ${checkDue()?`<div class="nudge"><span>${S.checks.length?"이번 주 마음 점검 (1분)":"처음 마음 상태 기록하기 (1분)"}</span><button class="link accent" id="toCheck">하기</button></div>`
+      : !S.subscribed && left<=2 ? `<div class="nudge"><span>${left>0?`무료 체험이 ${left}일 남았어요`:"무료 체험이 끝났어요"}</span><button class="link accent" id="toPay">구독 보기</button></div>`:""}`;
+  const sit=$("#sit"); sit.oninput=()=>{ $("#send").disabled = sit.value.trim().length<5; };
+  $("#send").onclick=()=>analyze(sit.value.trim());
+  $("#toCheck")?.addEventListener("click",()=>{ track("check_open",{from:"nudge"}); go("check"); });
+  $("#toPay")?.addEventListener("click",()=>{ track("paywall_open",{from:"nudge"}); go("paywall"); });
+  if (dictation) bindVoice();
+}
+function bindVoice(){
+  const btn=$("#voice"), t=$("#sit"); if(!btn||!t) return;
+  let on=false;
+  dictation.onFinal(({text})=>{ const ta=$("#sit"); if(!ta) return; ta.value=(ta.value+" "+text).trim(); ta.dispatchEvent(new Event("input")); });
+  dictation.onState(({state})=>{ on=state==="listening"; const b=$("#voice"); if(b){ b.dataset.on=on; b.textContent=on?"듣고 있어요. 누르면 멈춰요":"음성으로 말하기"; } });
+  btn.onclick=()=>{ if(on){ dictation.stop(); return; } dictation.start().catch(()=>toast("음성 입력을 쓸 수 없어요. 글로 적어 주세요")); track("voice_input_start"); };
+}
+
+/* 지난 미션 결과만 먼저 묻는 화면 */
+function renderResultAsk(r){
+  app.innerHTML = `
+    <h1>오늘</h1><p class="lead">지난번 해 보기로 한 행동, 어땠나요?</p>
+    <div class="card">
+      <p class="mission">${esc(r.mission)}</p>
+      <div class="row" id="res">${["좋았어요","그저 그랬어요","어려웠어요"].map(x=>`<button class="pill">${x}</button>`).join("")}</div>
+      <input type="text" id="memo" placeholder="아이 반응을 한 줄로 (선택)" style="margin-top:12px">
+      <p class="label" style="margin:10px 0 0">다음 제안에 반영돼요.</p>
+    </div>
+    <div class="center"><button class="link" id="skip">아직 못 해 봤어요</button></div>`;
+  $("#res").onclick=e=>{ const b=e.target.closest(".pill"); if(!b) return;
+    r.result=b.textContent; r.memo=$("#memo").value.trim(); r.resultDate=today(); markActive(); save();
+    track("mission_result",{result:r.result, card_id:r.card, has_memo:!!r.memo});
+    renderAfterResult(r); };
+  $("#skip").onclick=()=>{ r.status="later"; save(); track("mission_skip"); go("today"); };
+}
+
+function renderAfterResult(r){
+  const msg = r.result==="좋았어요" ? "잘하셨어요. 작은 변화가 시작됐어요." : r.result==="그저 그랬어요" ? "시도한 것만으로도 의미가 있어요." : "괜찮아요. 실패가 아니라, 아이에게 맞는 방법을 찾아가는 과정이에요.";
+  app.innerHTML = `<h1>${esc(msg)}</h1>
+    <p class="lead">“${esc(r.mission)}” · ${esc(r.result)}${r.memo?` · ${esc(r.memo)}`:""}</p>
+    <div class="card"><p style="margin:0">이 결과를 반영해서 다음에 해 볼 한 가지를 바로 알려 드릴게요. 상황을 다시 적지 않아도 돼요.</p>
+      <button class="btn primary" id="next">이어서 다음 한 가지 받기</button></div>
+    <div class="center"><button class="link" id="new">다른 일이 있었어요</button></div>`;
+  $("#next").onclick=()=>nextStep(r);
+  $("#new").onclick=()=>{ track("next_step_skip"); go("today"); };
+}
+
+/* ============ 분석 ============ */
+const profileText = () => `자녀: ${S.profile.grade}, ${S.profile.gender}. 주요 고민: ${S.profile.concerns.join(", ")||"없음"}.`;
+function historyText(exceptId){
+  const recs=S.records.filter(r=>r.mission && r.id!==exceptId).slice(0,6);
+  return recs.length ? recs.map(r=>`- ${r.date} 상황: ${r.situation} / 제안: ${r.mission} / 결과: ${r.result||(r.status==="later"?"하지 않음":"아직 기록 없음")}${r.memo?` / 아이 반응: ${r.memo}`:""}${(r.thread||[]).length?` / 추가 질문: ${r.thread.map(t=>t.q).join("; ")}`:""}`).join("\n") : "없음";
+}
+function manualText(){ const m=buildManual(); return m.goods.length ? `통했던 방법: ${m.goods.join(", ")}${m.hard?`. 어려웠던 점: ${m.hard}`:""}` : "아직 충분한 기록 없음"; }
+const OUT_FMT = `{"crisis":"none","signal":"green","signal_reason":"한 문장","continuity":"이전 상담과 이어지는 한두 문장 (이전 상담이 없으면 빈 문자열)","empathy":"부모 감정을 인정하는 한 문장","inner":["아이의 가능한 속마음","속마음"],"avoid":"지금 피할 말","instead":"대신 할 말","card":"C1","action":"오늘 해 볼 행동 1개","example":"그대로 쓸 예시 문장"}`;
+function analysisPrompt(text){
+  const hist = historyText();
+  return `당신은 사춘기 자녀를 둔 부모를 돕는 코칭 도우미입니다. 진단·치료는 하지 않습니다. 따뜻하고 짧게, 한국어 존댓말로 답합니다.
+아래 원칙 카드 중 가장 맞는 카드 1개를 골라 그 원칙에만 근거하세요.
+[원칙 카드]
+${CARDS.map(c=>`${c.id} (${c.area}) ${c.title}: ${c.text}`).join("\n")}
+[아이 정보] ${profileText()}
+[이 아이에게 통했던 방법] ${manualText()}
+[이전 상담 기록 (최신순)]
+${hist}
+이전 상담과 이어서 답하세요: 같은 주제가 반복되면 이전에 무엇을 시도했고 아이가 어떻게 반응했는지 continuity에서 구체적으로 언급하고, 이번 제안은 그 다음 단계여야 합니다. 이미 시도한 행동을 그대로 반복하지 마세요. 통했던 방법은 적극 활용하세요.
+직전 결과가 "어려웠어요"면 더 부담이 적은 행동(문자, 쪽지, 간식 등)을, "좋았어요"가 이어지면 한 걸음 더 가까워지는 행동을 제안하세요.
+[부모가 적은 상황]
+${text}
+signal: green=흔한 사춘기 갈등, yellow=몇 주 이상 지속되거나 수면·식사·등교 변화가 있는 지켜볼 신호, red=전문가 상담 권장.
+자해·자살·가출·폭력·학대 신호가 있으면 crisis에 self_harm, runaway, violence 중 하나, 나머지는 빈 값. 없으면 "none".
+JSON만 출력:
+${OUT_FMT}`;
+}
+const short = s => String(s||"").replace(/[.。]\s*$/,"");
+function demoContinuity(){
+  const last=S.records.find(r=>r.mission && r.result);
+  if(!last) return "";
+  const how = last.result==="좋았어요"?"좋은 반응이 있었죠":last.result==="어려웠어요"?"쉽지 않았죠":"반응이 애매했죠";
+  return `지난번 “${short(last.mission)}” 시도는 ${how}${last.memo?` (${last.memo})`:""}. 그 경험을 반영해서 제안드려요.`;
+}
+function nextPrompt(r){
+  return `당신은 사춘기 자녀를 둔 부모를 돕는 코칭 도우미입니다. 진단·치료는 하지 않습니다. 따뜻하고 짧게, 한국어 존댓말로 답합니다.
+부모가 지난 상담에서 받은 행동을 해 보고 결과를 알려 왔습니다. 새 상황 입력 없이, 이 결과를 반영한 '다음 한 가지'를 제안하세요.
+[원칙 카드]
+${CARDS.map(c=>`${c.id} (${c.area}) ${c.title}: ${c.text}`).join("\n")}
+[아이 정보] ${profileText()}
+[이 아이에게 통했던 방법] ${manualText()}
+[이번에 이어갈 상담]
+상황: ${r.situation}
+제안했던 행동: ${r.mission}
+결과: ${r.result}${r.memo?` / 아이 반응: ${r.memo}`:""}
+[그 이전 기록]
+${historyText(r.id)}
+규칙: 좋았어요 → 한 걸음 더 가까워지는 행동. 그저 그랬어요 → 같은 방향에서 방식을 바꾼 행동. 어려웠어요 → 훨씬 부담이 적은 행동(문자, 쪽지, 기다려 주기 등)과 함께 "실패가 아니다"는 안심. 이미 해 본 행동은 반복하지 마세요.
+continuity에는 지난 시도와 아이 반응을 구체적으로 짚어 주세요. 위기 신호가 있으면 crisis를 채우세요.
+JSON만 출력:
+${OUT_FMT}`;
+}
+function demoNext(r){
+  const memo = r.memo?` (${r.memo})`:"";
+  if (r.result==="좋았어요") return {crisis:"none",signal:"green",signal_reason:"",continuity:`지난번 “${short(r.mission)}” 시도에 좋은 반응이 있었죠${memo}. 문이 조금 열렸으니 한 걸음만 더 다가가 볼게요.`,empathy:"작은 변화를 만들어 내셨어요. 정말 잘하셨어요.",inner:["엄마가 달라졌다는 걸 느끼고 있어요","부담 없는 대화라면 더 해도 괜찮아요"],avoid:"그래서 공부는 언제 할 건데?",instead:"요즘 제일 재밌는 게 뭐야?",card:"C14",action:"이번 주에 10분짜리 짧은 시간을 같이 보내 보세요. 편의점 산책이나 간식 사러 가기처럼요.",example:"편의점 갈 건데 같이 갈래? 먹고 싶은 거 하나 골라."};
+  if (r.result==="그저 그랬어요") return {crisis:"none",signal:"green",signal_reason:"",continuity:`지난번 “${short(r.mission)}” 시도는 반응이 애매했죠${memo}. 방향은 맞으니 방식만 바꿔 볼게요.`,empathy:"기대만큼 반응이 없어서 아쉬우셨겠어요.",inner:["싫지는 않지만 어떻게 반응해야 할지 어색해요","대답을 요구받지 않을 때 더 편해요"],avoid:"엄마가 말하는데 대답 좀 해.",instead:"대답 안 해도 돼. 그냥 엄마가 하고 싶은 말이었어.",card:"C10",action:"대답이 필요 없는 말 한마디만 건네 보세요.",example:"오늘 바람 많이 불더라. 따뜻하게 입고 다녀."};
+  const already = r.card==="C12";
+  return {crisis:"none",signal:"green",signal_reason:"",continuity:`지난번 “${short(r.mission)}” 시도는 쉽지 않았죠${memo}. 실패가 아니라, 아이가 아직 준비가 안 됐다는 신호예요.`,empathy:"용기 내서 시도하셨는데 반응이 없어 속상하셨겠어요.",inner:["아직 마음을 정리하는 중이에요","다가오면 더 숨고 싶어져요"],avoid:"엄마가 이렇게까지 하는데 왜 그래?",instead:"천천히 해도 괜찮아. 엄마는 기다릴게.",card:already?"C16":"C12",action:already?"오늘은 아무 말 없이 방문 앞에 간식만 두고, 이틀 정도는 먼저 다가가지 말고 기다려 주세요.":"직접 말하지 말고, 방문 앞에 짧은 쪽지만 남겨 보세요.",example:already?"(쪽지 없이 간식만 두기)":"배고프면 먹어. 엄마는 거실에 있을게."};
+}
+function demoAnalysis(text){
+  const prevHard = S.records.find(r=>r.mission&&r.result)?.result==="어려웠어요";
+  const yellow=/몇 주|주째|잠을 안|밥을 안|학교를 안|방에서 안 나|울어|무기력|우울/.test(text);
+  const base={crisis:"none", continuity:demoContinuity(), signal:yellow?"yellow":"green", signal_reason:yellow?"생활 리듬 변화가 함께 보여 2주 정도 지켜볼 필요가 있어요.":""};
+  if (prevHard) return {...base, empathy:"지난번 시도가 잘 안 돼서 더 막막하셨겠어요.", inner:["아직 마음을 열 준비가 안 됐어요","부담 없는 방식이면 받아들일 수 있어요"], avoid:"왜 대답을 안 해?", instead:"대답 안 해도 괜찮아. 필요하면 말해.", card:"C12", action:"이번엔 직접 말하지 말고 문자 한 줄만 보내 보세요.", example:"오늘도 고생 많았어. 냉장고에 간식 있어."};
+  if (/폰|핸드폰|스마트폰|게임|유튜브/.test(text)) return {...base, empathy:"매일 같은 문제로 부딪히니 지치셨겠어요.", inner:["폰은 친구들과 연결된 통로라 뺏기면 고립될까 불안해요","통제당한다고 느끼면 더 고집을 부리게 돼요"], avoid:"당장 폰 내놔!", instead:"폰 시간, 우리 같이 정해 보자.", card:"C19", action:"주말에 폰 사용 규칙을 함께 정하자고 제안해 보세요.", example:"엄마가 정하지 않고 같이 정해 보자. 너는 몇 시까지가 괜찮을 것 같아?"};
+  if (/성적|시험|점수|공부/.test(text)) return {...base, empathy:"많이 서운하고 걱정되셨겠어요.", inner:["실망시킬까 봐 두려워요","혼자 정리할 시간이 필요해요"], avoid:"왜 숨겨?", instead:"보여 주고 싶을 때 보여 줘.", card:"C2", action:"저녁에 간식을 건네며 성적 말고 다른 얘기 한마디만 해 보세요.", example:"오늘 많이 피곤했지? 이거 먹고 쉬어."};
+  if (/늦게|귀가|밤에|외박/.test(text)) return {...base, empathy:"연락 없이 늦으면 얼마나 걱정되셨을지요.", inner:["친구들과의 시간이 지금 가장 중요해요","혼날까 봐 연락을 미뤘어요"], avoid:"지금이 몇 시야!", instead:"늦어서 걱정했어. 무사히 와서 다행이다.", card:"C7", action:"오늘은 혼내기보다 걱정했던 마음을 ‘나는’으로 말해 보세요.", example:"늦어서 걱정했어. 다음엔 늦을 것 같으면 문자 하나만 줘."};
+  return {...base, empathy:"다가가고 싶은데 벽을 느끼셔서 속상하셨겠어요.", inner:["지금은 말할 기운이 없어요","혼날까 봐 먼저 입을 닫았어요"], avoid:"너는 왜 맨날 그래?", instead:"요즘 많이 힘들어 보여. 필요한 거 있으면 말해.", card:"C12", action:"오늘은 직접 묻지 말고 짧은 문자 한 줄만 보내 보세요.", example:"오늘 고생했어. 필요한 거 있으면 말해."};
+}
+async function analyze(text){
+  if (text.length<5) return;
+  if (!canUse()){ track("paywall_open",{from:"consult_blocked"}); go("paywall"); return; }
+  track("consult_submit",{length_bucket:text.length<50?"short":text.length<200?"medium":"long", has_prev_result:!!S.records.find(r=>r.result)});
+  if (localCrisis(text)) return go("crisis",{text, type:"keyword"});
+  document.body.classList.add("full");
+  app.innerHTML = `<div class="loading"><span class="dot"></span>${esc(kid())}의 마음을 살펴보고 있어요</div>`;
+  const t0=performance.now();
+  const {data:a, source} = await ask(analysisPrompt(text), ()=>demoAnalysis(text));
+  if (a.crisis && a.crisis!=="none") return go("crisis",{text, type:a.crisis});
+  const rec = makeRec(a, text, null), card = CARDS.find(c=>c.id===rec.card);
+  track("analysis_shown",{source, card_id:card.id, card_area:card.area, signal:rec.signal, latency_ms:Math.round(performance.now()-t0)});
+  go("analysis", rec);
+}
+function makeRec(a, situation, followOf){
+  const card = CARDS.find(c=>c.id===a.card) || CARDS[5];
+  const rec = {id:Date.now(), date:today(), situation, followOf, continuity:a.continuity||"", signal:a.signal||"green", signalReason:a.signal_reason||"", empathy:a.empathy, inner:a.inner||[], avoid:a.avoid, instead:a.instead||a.example, card:card.id, mission:a.action, example:a.example, result:null, memo:"", status:"new", thread:[]};
+  S.records.unshift(rec); markActive(); save(); return rec;
+}
+async function nextStep(r){
+  if (!canUse()){ track("paywall_open",{from:"next_step_blocked"}); go("paywall"); return; }
+  track("next_step_request",{prev_result:r.result, card_id:r.card});
+  document.body.classList.add("full");
+  app.innerHTML = `<div class="loading"><span class="dot"></span>지난 결과를 반영하고 있어요</div>`;
+  const {data:a, source} = await ask(nextPrompt(r), ()=>demoNext(r));
+  if (a.crisis && a.crisis!=="none") return go("crisis",{text:r.memo||r.situation, type:a.crisis});
+  const rec = makeRec(a, r.situation, r.id);
+  track("analysis_shown",{source, card_id:rec.card, signal:rec.signal, follow_up:true});
+  go("analysis", rec);
+}
+function followPrompt(rec, q){
+  return `당신은 사춘기 자녀를 둔 부모를 돕는 코칭 도우미입니다. 진단·치료는 하지 않습니다. 한국어 존댓말로 2~4문장, 구체적으로 답하세요.
+[아이 정보] ${profileText()}
+[이 아이에게 통했던 방법] ${manualText()}
+[지금 상담] 상황: ${rec.situation} / 아이 속마음: ${rec.inner.join(", ")} / 제안한 행동: ${rec.mission} / 예시 문장: ${rec.example}
+[이전 상담 기록]
+${historyText(rec.id)}
+[이 상담에서 이미 나눈 질문]
+${(rec.thread||[]).map(t=>`Q: ${t.q}\nA: ${t.a}`).join("\n")||"없음"}
+[부모의 추가 질문] ${q}
+위기 신호(자해·자살·가출·폭력·학대)가 보이면 crisis에 유형을 넣고 answer는 빈 값. 없으면 "none".
+JSON만 출력: {"crisis":"none","answer":"답변"}`;
+}
+function demoFollow(rec, q){
+  if (/안\s?받|무시|대답.*없|반응.*없/.test(q)) return {crisis:"none",answer:"반응이 없어도 괜찮아요. 사춘기 아이는 부모의 시도를 받아들이는 데 시간이 걸려요. 같은 방식으로 두세 번 더 해 보시고, 그래도 어렵다면 결과에 ‘어려웠어요’를 남겨 주세요. 더 부담 없는 방법으로 바꿔 드릴게요."};
+  if (/아빠|남편|배우자/.test(q)) return {crisis:"none",answer:"두 분이 같은 방식으로 반응하는 게 중요해요. 오늘 제안한 문장을 배우자분께도 공유해 주시고, 당분간 한 사람은 규칙, 한 사람은 정서적 지지처럼 역할을 나누지 말고 같은 톤을 유지해 보세요."};
+  return {crisis:"none",answer:`좋은 질문이에요. 핵심은 “${rec.mission}”을 할 때 대답이나 변화를 바로 기대하지 않는 거예요. 아이가 부담을 느끼지 않는 것이 이번 단계의 목표예요.`};
+}
+function renderAnalysis(rec){
+  const card=CARDS.find(c=>c.id===rec.card), sid="A"+rec.id, saved=S.saved.some(s=>s.id===sid);
+  const sig = rec.signal==="yellow" ? `<div class="notice yellow"><b>지켜볼 신호예요</b>${esc(rec.signalReason)} 2주 넘게 이어지면 청소년상담 1388에서 부모도 상담받을 수 있어요.</div>`
+            : rec.signal==="red" ? `<div class="notice red"><b>전문가와 이야기해 보시길 권해요</b>${esc(rec.signalReason)}<a class="call" href="tel:1388" data-call="1388"><span>청소년상담 (부모 상담 가능)</span><span>1388</span></a></div>` : "";
+  app.innerHTML = `
+    ${rec.result?`<button class="link" id="back" style="margin-bottom:8px">← 기록으로</button>`:""}
+    <p class="situation">${esc(rec.situation)}</p>
+    ${rec.continuity?`<div class="cont"><b>${rec.followOf?"지난 결과에서 이어서":"지난 상담과 이어서"}</b>${esc(rec.continuity)}</div>`:""}
+    <h1 style="font-size:1.5rem">${esc(rec.empathy)}</h1>
+    <div class="card" style="margin-top:18px">
+      <h2>아이 속마음은 이럴 수 있어요</h2>
+      <ul class="inner">${rec.inner.map(i=>`<li>${esc(i)}</li>`).join("")}</ul>
+      <div class="swap"><p class="old">${esc(rec.avoid)}</p><p class="new">${esc(rec.instead)}</p></div>
+      ${sig}
+      <details id="why"><summary>왜 이렇게 볼까요?</summary><p>${esc(card.text)}</p><p class="label" style="margin-top:4px">${esc(card.area)} · ${esc(card.title)} · 전문가 검수 전 초안</p></details>
+    </div>
+    <div class="card">
+      <h2>오늘의 한 가지</h2>
+      <p class="mission" style="margin-bottom:8px">${esc(rec.mission)}</p>
+      <p style="margin:0;font-weight:600">“${esc(rec.example)}”</p>
+      ${rec.result?`<p class="label" style="margin:12px 0 0">결과: ${esc(rec.result)}${rec.memo?` · ${esc(rec.memo)}`:""}</p>`:`<button class="btn primary" id="accept">해 볼게요</button>`}
+      <div class="center" style="display:flex;justify-content:center;gap:20px">
+        <button class="link" id="save">${saved?"저장한 문장이에요":"문장 저장"}</button>
+        ${rec.result?"":`<button class="link" id="later">다음에 할게요</button>`}
+      </div>
+    </div>
+    <div class="card">
+      <h2>더 궁금한 게 있나요?</h2>
+      <div class="thread">${(rec.thread||[]).map(t=>`<p class="q">${esc(t.q)}</p><p class="a">${esc(t.a)}</p>`).join("")}</div>
+      <div class="ask"><input type="text" id="fq" placeholder="예: 그래도 대답을 안 하면요?"><button id="fsend" disabled>묻기</button></div>
+      <p class="label" style="margin:8px 0 0">이 상담 내용을 기억하고 답해요.</p>
+    </div>`;
+  const fq=$("#fq"); fq.oninput=()=>{ $("#fsend").disabled = fq.value.trim().length<2; };
+  fq.onkeydown=e=>{ if(e.key==="Enter" && !$("#fsend").disabled) $("#fsend").click(); };
+  $("#fsend").onclick=async()=>{
+    const q=fq.value.trim(); if(!q) return;
+    if (localCrisis(q)) return go("crisis",{text:q, type:"keyword"});
+    $("#fsend").disabled=true; fq.disabled=true;
+    $(".thread").insertAdjacentHTML("beforeend",`<p class="q">${esc(q)}</p><div class="loading" style="padding:8px 0"><span class="dot"></span>생각하고 있어요</div>`);
+    const {data:d, source} = await ask(followPrompt(rec,q), ()=>demoFollow(rec,q));
+    if (d.crisis && d.crisis!=="none") return go("crisis",{text:q, type:d.crisis});
+    rec.thread=rec.thread||[]; rec.thread.push({q, a:d.answer}); save();
+    track("followup_ask",{source, nth:rec.thread.length});
+    go("analysis",rec);
+  };
+  $("#why").addEventListener("toggle",e=>{ if(e.target.open) track("evidence_open",{card_id:card.id}); });
+  $("#back")?.addEventListener("click",()=>go("child"));
+  if ($("#accept")) $("#accept").onclick=()=>{ rec.status="accepted"; save(); track("mission_accept",{card_id:card.id}); toast(S.notif.evening?"저녁 8시에 어땠는지 여쭤볼게요":"오늘의 미션으로 저장했어요"); go("today"); };
+  if ($("#later")) $("#later").onclick=()=>{ rec.status="later"; save(); track("mission_later",{card_id:card.id}); go("today"); };
+  $("#save").onclick=()=>{ if(saved) return; S.saved.push({id:sid, cat:"내 상담", old:rec.avoid, new:rec.instead}); save(); track("phrase_save",{source:"analysis"}); go("analysis",rec); };
+  app.querySelectorAll("[data-call]").forEach(a=>a.onclick=()=>track("help_call_click",{line:a.dataset.call, from:"signal"}));
+}
+function renderCrisis({text,type}){
+  track("crisis_detected",{method:type==="keyword"?"keyword":"ai", crisis_type:type==="keyword"?"unknown":type});
+  S.records.unshift({id:Date.now(), date:today(), situation:text, crisis:type}); save();
+  app.innerHTML = `<h1>지금은 도움이 먼저예요</h1>
+    <p class="lead">아이의 안전이 걱정되는 상황으로 보여요. 이럴 땐 앱의 조언보다 전문가와 바로 이야기하는 게 좋아요. 누르면 바로 전화가 연결돼요.</p>
+    <a class="call" href="tel:109" data-call="109"><span>자살예방상담전화 (24시간)</span><span>109</span></a>
+    <a class="call" href="tel:119" data-call="119"><span>생명이 위급할 때</span><span>119</span></a>
+    <a class="call" href="tel:1388" data-call="1388"><span>청소년상담 · 가출·위기 청소년</span><span>1388</span></a>
+    <a class="call" href="tel:112" data-call="112"><span>폭력·학대 신고</span><span>112</span></a>
+    <a class="call" href="tel:15770199" data-call="1577-0199"><span>부모님 마음이 무너질 때</span><span>1577-0199</span></a>
+    <p class="label" style="margin-top:14px">혼자 감당하지 않으셔도 돼요. (번호는 출시 전 다시 확인)</p>
+    <button class="btn ghost" id="back">돌아가기</button>`;
+  app.querySelectorAll("[data-call]").forEach(a=>a.onclick=()=>track("help_call_click",{line:a.dataset.call, from:"crisis"}));
+  $("#back").onclick=()=>go("today");
+}
+
+/* ============ 우리 아이: 사용설명서 + 이번 주 + 기록/저장한 문장 ============ */
+function buildManual(){
+  const done=S.records.filter(r=>r.result);
+  const score={}; done.forEach(r=>{ score[r.card]=score[r.card]||{good:0,hard:0}; if(r.result==="좋았어요") score[r.card].good++; if(r.result==="어려웠어요") score[r.card].hard++; });
+  const goods=Object.entries(score).filter(([,v])=>v.good>0).sort((a,b)=>b[1].good-a[1].good).slice(0,3).map(([id])=>CARDS.find(c=>c.id===id)?.trait).filter(Boolean);
+  const hardRec=done.find(r=>r.result==="어려웠어요");
+  return {count:done.length, goods, hard: hardRec ? (hardRec.memo ? `“${hardRec.memo}” 같은 반응이 있었어요. 갈등 직후 직접 다가가는 건 아직 어려워해요` : "갈등 직후 직접 다가가는 건 아직 어려워해요") : null};
+}
+let childSeg="records";
+function renderChild(){
+  const m=buildManual(), wk=ago(6);
+  const week=S.records.filter(r=>r.result && r.resultDate>=wk), good=week.filter(r=>r.result==="좋았어요").length;
+  const c=S.checks, first=c[0], last=c[c.length-1];
+  let change="";
+  if (c.length>1){ const pct=Math.round((last.score-first.score)/first.score*100); change = pct<0 ? `처음보다 마음의 부담이 ${-pct}% 가벼워졌어요.` : `처음보다 마음의 부담이 ${pct}% 늘었어요. 혼자 버티지 마세요.`; }
+  else if (week.length) change = `이번 주 ${week.length}번 시도해서 ${good}번 좋은 반응이 있었어요.`;
+  app.innerHTML = `
+    <h1>기록</h1><p class="lead">아이와 나, 둘의 변화를 모아 봤어요.</p>
+    <div class="card">
+      <h2>${esc(kid())} 사용설명서</h2>
+      ${m.count>=3 && m.goods.length ? `<ul class="manual" style="margin:0;padding-left:20px">${m.goods.map(g=>`<li>${esc(g)}</li>`).join("")}${m.hard?`<li class="hard">${esc(m.hard)}</li>`:""}</ul>
+        <p class="label" style="margin:10px 0 0">결과 ${m.count}개를 바탕으로 정리했어요. 기록할수록 정확해져요.</p>`
+      : `<p style="margin:0">미션 결과를 3번 기록하면 우리 아이에게 무엇이 통하는지 정리해 드려요.</p><div class="progress"><span style="width:${Math.min(100,m.count/3*100)}%"></span></div><p class="label" style="margin:6px 0 0">${m.count} / 3</p>`}
+    </div>
+    <div class="card">
+      <h2>이번 주</h2>
+      <p style="margin:0">${esc(change || "아직 이번 주 기록이 없어요.")}</p>
+      <div class="stat"><div><b>${streak()}</b><span>연속 실천</span></div><div><b>${week.length}</b><span>해 본 미션</span></div><div><b>${week.length?Math.round(good/week.length*100)+"%":"–"}</b><span>좋은 반응</span></div></div>
+    </div>
+    <div class="card">
+      <h2>내 마음 점검</h2>
+      ${c.length ? `<p style="margin:0">최근 점검 ${last.date.slice(5).replace("-","월 ")}일 · 부담 점수 ${last.score.toFixed(1)}점${c.length>1?` (처음 ${first.score.toFixed(1)}점)`:""}</p>
+        <p class="label" style="margin:4px 0 0">1~5점, 낮을수록 마음이 가벼워요. 일주일에 한 번 점검하면 변화를 보여 드려요.</p>`
+      : `<p style="margin:0">지금 마음 상태를 기록해 두면, 앞으로 얼마나 가벼워지는지 비교해 드려요.</p>`}
+      <button class="btn ${checkDue()?"primary":"ghost"} small" id="toCheck">${!c.length?"처음 마음 기록하기":checkDue()?"이번 주 마음 점검하기":"다시 점검하기"}</button>
+    </div>
+    <div class="seg" role="tablist">
+      <button role="tab" aria-selected="${childSeg==="records"}" data-s="records">상담 기록</button>
+      <button role="tab" aria-selected="${childSeg==="phrases"}" data-s="phrases">저장한 문장</button>
+    </div>
+    <div id="segBody"></div>`;
+  $("#toCheck")?.addEventListener("click",()=>{ track("check_open",{from:"child"}); go("check"); });
+  app.querySelector(".seg").onclick=e=>{ const b=e.target.closest("button"); if(!b) return; childSeg=b.dataset.s; track("child_segment",{segment:childSeg}); renderChild(); };
+  const body=$("#segBody");
+  if (childSeg==="records"){
+    body.innerHTML = S.records.length ? S.records.map(r=> r.crisis
+      ? `<div class="rec"><p class="date">${r.date}</p><p>${esc(r.situation)}</p><span class="tag red">전문기관 안내</span></div>`
+      : `<div class="rec" data-open="${r.id}" style="cursor:pointer"><p class="date">${r.date}</p><p>${esc(r.situation)}</p><p style="color:var(--sub);font-size:.93rem">→ ${esc(r.mission)}</p>${r.followOf?`<span class="tag">이어진 상담</span>`:""}${(r.thread||[]).length?`<span class="tag">추가 질문 ${r.thread.length}</span>`:""}
+          <span class="tag">${esc(r.result || (r.status==="accepted"?"해 보는 중":"하지 않음"))}</span>${r.memo?`<span class="tag">${esc(r.memo)}</span>`:""}</div>`).join("")
+      : `<p class="empty">아직 기록이 없어요. 오늘 탭에서 있었던 일을 말해 보세요.</p>`;
+    body.querySelectorAll("[data-open]").forEach(el=>el.onclick=()=>{ const r=S.records.find(x=>String(x.id)===el.dataset.open); if(r && r.empathy){ track("record_open"); go("analysis",r); } else toast("예시 데이터는 상세 내용이 없어요"); });
+  } else {
+    const savedList=S.saved.map(s=>typeof s==="string"?PHRASES.find(p=>p.id===s):s).filter(Boolean);
+    const rec=PHRASES.filter(p=>S.profile.concerns.includes(p.cat) && !S.saved.includes(p.id)).slice(0,3);
+    const recList = rec.length? rec : PHRASES.filter(p=>!S.saved.includes(p.id)).slice(0,3);
+    body.innerHTML = (savedList.length? savedList.map(p=>`<div class="phrase"><p class="old">${esc(p.old)}</p><p class="new">${esc(p.new)}</p></div>`).join("")
+      : `<p class="empty" style="padding-bottom:4px">분석에서 ‘문장 저장’을 누르면 여기에 모여요.</p>`)
+      + (recList.length? `<p class="label" style="margin-top:18px">${esc(kid())} 부모님께 추천하는 문장</p>` + recList.map(p=>`<div class="phrase"><p class="old">${esc(p.old)}</p><p class="new">${esc(p.new)}</p><button class="link accent" data-add="${p.id}" style="padding:4px 0 0">저장</button></div>`).join("") : "");
+    body.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>{ S.saved.push(b.dataset.add); save(); track("phrase_save",{source:"recommend", phrase_id:b.dataset.add}); renderChild(); });
+  }
+}
+
+/* ============ 주간 마음 점검 (불안 6문항 + 갈등 횟수 2개) ============ */
+function renderCheck(){
+  const ans=Array(6).fill(null), cnt={talkFirst:0, yelled:0};
+  app.innerHTML = `<h1>이번 주 마음 점검</h1><p class="lead">지난 일주일을 떠올리며 답해 주세요. 변화를 숫자로 보여 드려요.</p>
+    <div class="card" style="padding:6px 20px">
+      <div class="counter"><span>아이가 먼저 말을 건 횟수</span><div class="ctl"><button data-k="talkFirst" data-d="-1" aria-label="줄이기">−</button><b id="talkFirst">0</b><button data-k="talkFirst" data-d="1" aria-label="늘리기">+</button></div></div>
+      <div class="counter" style="border:0"><span>언성이 높아진 횟수</span><div class="ctl"><button data-k="yelled" data-d="-1" aria-label="줄이기">−</button><b id="yelled">0</b><button data-k="yelled" data-d="1" aria-label="늘리기">+</button></div></div>
+    </div>
+    <div class="card" style="padding:6px 20px">${ANX_Q.map((q,i)=>`<div class="q"><p>${q}</p><div class="mood" data-q="${i}"></div><div class="scale"><span>전혀 아니다</span><span>매우 그렇다</span></div></div>`).join("")}</div>
+    <button class="btn primary" id="done" disabled>저장하기</button>
+    <div class="center"><button class="link" id="cancel">다음에 할게요</button></div>`;
+  app.querySelectorAll(".counter button").forEach(b=>b.onclick=()=>{ const k=b.dataset.k; cnt[k]=Math.max(0,cnt[k]+(+b.dataset.d)); $("#"+k).textContent=cnt[k]; });
+  app.querySelectorAll("[data-q]").forEach(el=>moodRow(el,m=>{ ans[+el.dataset.q]=m; $("#done").disabled=ans.some(a=>a===null); }));
+  $("#done").onclick=()=>{
+    const score=+(ans.reduce((a,b)=>a+b,0)/6).toFixed(2);
+    S.checks.push({date:today(), score, ...cnt}); save();
+    track("weekly_check",{anxiety_score:score, talk_first:cnt.talkFirst, yelled:cnt.yelled, nth:S.checks.length});
+    toast("저장했어요"); go("child");
+  };
+  $("#cancel").onclick=()=>go("today");
+}
+
+/* ============ 구독 (결제 흉내) ============ */
+let pickedPlan="yearly";
+function renderPaywall(){
+  app.innerHTML = `<button class="link" id="close">닫기</button>
+    <h1 style="margin-top:10px">계속 함께할게요</h1>
+    <p class="lead">상담 한 번 비용의 5분의 1로, 한 달 내내.</p>
+    <button class="plan" data-p="yearly" aria-pressed="${pickedPlan==="yearly"}"><span class="badge">2개월 무료</span><b>연간 99,000원</b><br><span style="color:var(--sub);font-size:.9rem">월 8,250원꼴</span></button>
+    <button class="plan" data-p="monthly" aria-pressed="${pickedPlan==="monthly"}"><b>월간 9,900원</b><br><span style="color:var(--sub);font-size:.9rem">언제든 해지할 수 있어요</span></button>
+    <button class="btn primary" id="buy">구독 시작하기</button>
+    <p class="label" style="margin-top:14px">위기 상황 안내는 구독과 관계없이 항상 무료예요. 프로토타입이라 실제 결제는 되지 않아요.</p>`;
+  app.querySelectorAll(".plan").forEach(b=>b.onclick=()=>{ pickedPlan=b.dataset.p; track("plan_select",{plan:pickedPlan}); renderPaywall(); });
+  $("#close").onclick=()=>{ track("paywall_close"); go("today"); };
+  $("#buy").onclick=()=>{
+    const value=pickedPlan==="yearly"?99000:9900;
+    track("begin_checkout",{plan:pickedPlan, value, currency:"KRW"});
+    S.subscribed=true; S.plan=pickedPlan; save();
+    track("purchase",{plan:pickedPlan, value, currency:"KRW", simulated:true});
+    toast("구독이 시작됐어요"); go("today");
+  };
+}
+
+/* ============ 마이 ============ */
+function renderMy(){
+  const left=trialLeft();
+  app.innerHTML = `<h1>마이</h1><p class="lead">${esc(kid())} 부모님</p>
+    <div class="card">
+      <div class="switch"><span>${esc(S.profile.grade)} · ${esc(S.profile.gender)}<br><span class="label">${esc(S.profile.concerns.join(", ")||"고민 선택 안 함")}</span></span><button class="link accent" id="edit">수정</button></div>
+      <div class="switch" style="border-top:1px solid var(--line)"><span>${S.subscribed?`${S.plan==="yearly"?"연간":"월간"} 구독 중`:left>0?`무료 체험 ${left}일 남음`:"무료 체험 종료"}</span>${S.subscribed?`<button class="link" id="cancelSub">해지</button>`:`<button class="link accent" id="pay">구독 보기</button>`}</div>
+    </div>
+    <div class="card">
+      <h2>알림</h2>
+      <label class="switch"><span>저녁 8시에 미션 결과 묻기</span><input type="checkbox" id="ne" ${S.notif.evening?"checked":""}></label>
+      <label class="switch"><span>시험·방학 2주 전 미리 알려 주기</span><input type="checkbox" id="ns" ${S.notif.season?"checked":""}></label>
+    </div>
+    <details class="card" style="margin-top:0"><summary style="font-size:1rem;color:var(--ink);font-weight:700">발표용 도구</summary>
+      <p class="label" style="margin-top:12px" id="gaStatus"></p>
+      <div class="log" id="eventLog"></div>
+      <button class="btn ghost small" id="seed">2주치 예시 데이터 채우기</button>
+      <button class="btn ghost small" id="endTrial">체험 종료 상태로 보기</button>
+      <button class="btn ghost small" id="reset">처음부터 다시</button>
+    </details>`;
+  renderLog();
+  $("#edit").onclick=()=>{ ob={step:1, grade:S.profile.grade, gender:S.profile.gender, concerns:[...S.profile.concerns], consent:true}; S.profile=null; go("onboarding"); };
+  $("#pay")?.addEventListener("click",()=>{ track("paywall_open",{from:"my"}); go("paywall"); });
+  $("#cancelSub")?.addEventListener("click",()=>{ S.subscribed=false; save(); track("subscription_cancel",{simulated:true}); renderMy(); });
+  $("#ne").onchange=e=>{ S.notif.evening=e.target.checked; save(); track("notification_toggle",{type:"evening", on:e.target.checked}); };
+  $("#ns").onchange=e=>{ S.notif.season=e.target.checked; save(); track("notification_toggle",{type:"season", on:e.target.checked}); };
+  $("#seed").onclick=()=>{ seedDemo(); track("demo_seed"); toast("예시 데이터를 채웠어요. 기록 탭을 보세요"); };
+  $("#endTrial").onclick=()=>{ S.subscribed=false; S.trialStart=ago(8); save(); track("demo_trial_end"); toast("체험 종료 상태예요"); renderMy(); };
+  $("#reset").onclick=()=>{ S=blank(); ob={step:1,grade:null,gender:null,concerns:[],consent:false}; save(); track("data_reset"); go("onboarding"); };
+}
+function renderLog(){
+  const st=$("#gaStatus"), el=$("#eventLog"); if(!st||!el) return;
+  st.textContent = typeof window.gtag==="function" ? "Google Analytics 연결됨: 아래 이벤트가 전송되고 있어요." : "Google Analytics 미연결: 직접 배포해 측정 ID를 넣으면 아래 이벤트가 GA로 전송돼요. 아이에 관한 글 내용은 보내지 않아요.";
+  el.innerHTML = events.length? events.slice(0,50).map(e=>`<div><b>${e.name}</b> ${esc(JSON.stringify(e.params))}</div>`).join("") : `<p class="empty">아직 이벤트가 없어요.</p>`;
+}
+function seedDemo(){
+  const items=[
+    [13,"성적표를 안 보여주고 방문을 닫았어요","저녁에 간식을 건네며 성적 말고 다른 얘기 한마디 하기","어려웠어요","방문을 안 열어줬어요","C2"],
+    [12,"어제 일 때문에 아침에도 말을 안 해요","문자로 ‘오늘도 고생했어’ 한 줄 보내기","좋았어요","‘응’이라고 답장 왔어요","C12"],
+    [10,"폰 때문에 또 언성이 높아졌어요","주말에 폰 규칙을 같이 정하자고 제안하기","좋았어요","10시까지로 스스로 정했어요","C13"],
+    [8,"학원 끝나고 연락 없이 늦게 왔어요","걱정했던 마음을 ‘나는’으로 말하기","그저 그랬어요","알았다고만 했어요","C7"],
+    [6,"진로 얘기를 꺼냈다가 짜증을 냈어요","쪽지로 응원 한 줄 남기기","좋았어요","쪽지를 책상에 붙여 뒀어요","C12"],
+    [4,"시험 기간이라 예민해요","간식 챙겨 주며 컨디션만 묻기","좋았어요","고맙다고 했어요","C14"],
+    [2,"방 정리 때문에 부딪혔어요","언제 정리할지 아이가 정하게 하기","좋았어요","토요일에 하겠대요","C13"]
+  ];
+  S.records = items.map(([d,sit,m,res,memo,c],i)=>({id:Date.now()-d*86400000+i, date:ago(d), resultDate:ago(Math.max(0,d-1)), situation:sit, signal:"green", card:c, mission:m, result:res, memo, status:"accepted"})).reverse().reverse();
+  S.records.sort((a,b)=>b.id-a.id);
+  S.active=[...new Set([13,12,11,10,8,7,6,5,4,3,2,1].map(ago))];
+  S.checks=[{date:ago(14),score:3.83,talkFirst:1,yelled:4},{date:ago(7),score:3.33,talkFirst:2,yelled:2},{date:today(),score:2.83,talkFirst:3,yelled:1}];
+  S.saved=["P1","P8"]; save();
+}
+
+if ("serviceWorker" in navigator && location.protocol==="https:") navigator.serviceWorker.register("/sw.js").catch(()=>{});
+/* 시작 */
+go(S.profile ? "today" : "onboarding");
+</script>
+</body>
+</html>

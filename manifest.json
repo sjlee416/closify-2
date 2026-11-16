@@ -1,0 +1,14 @@
+{
+  "name": "Closify",
+  "short_name": "Closify",
+  "description": "사춘기 자녀의 속마음을 통역하고 오늘 해 볼 한 가지를 알려 주는 코칭 앱",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FDF5F6",
+  "theme_color": "#C8344F",
+  "lang": "ko",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
